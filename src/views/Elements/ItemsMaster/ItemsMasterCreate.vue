@@ -1,0 +1,60 @@
+<template>
+  <main>
+    <div v-show="!loading.state" class="px-4 py-4 sm:px-6 lg:px-8">
+      <div class="mx-auto">
+        <breadcrumbs :trace-route="trace" />
+        <div class="pb-5 border-b border-gray-200">
+          <h1 class="text-2xl font-semibold text-gray-900 pt-4">New item master</h1>
+        </div>
+      </div>
+      <div class="mx-auto">
+        <ItemsMasterForm
+            :item-master="itemMasterData"
+            @save="saveData" />
+      </div>
+    </div>
+  </main>
+</template>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import Breadcrumbs from '@/components/Breadcrumbs.vue'
+import ItemsMasterService from '@/services/items_master.service'
+import { loading } from '@/store/loading'
+import { loadingButton } from '@/store/loadingButton'
+import { notifyError } from '@/utils/notify_error'
+import { notifySuccess } from '@/utils/notify_success'
+import ItemsMasterForm from '@/views/Elements/ItemsMaster/ItemsMasterForm.vue'
+
+const router = useRouter()
+const itemMasterData = ref({})
+
+const trace = [
+  { description: 'Home', pathName: 'HomePage', isLink: true, current: false },
+  { description: 'Elements', pathName: 'ElementsPage', isLink: true, current: false },
+  { description: 'Items Master', pathName: 'ItemsMasterListPage', isLink: true, current: false },
+  { description: 'Create', pathName: 'ItemsMasterCreate', isLink: false, current: true }
+]
+
+const saveData = (event) => {
+  ItemsMasterService.save(0, {
+      itemMaster: event.itemMaster,
+      country: event.country,
+      company: event.company,
+      oem: event.oem,
+      segment: event.segment,
+      technology: event.technology,
+      controllerType: event.controllerType,
+      networkElement: event.networkElement,
+      timeUnit: event.timeUnit,
+      status: event.status,
+    }).then(x => {
+      notifySuccess('Created', x.data)
+      router.push({ name: "ItemsMasterListPage" })
+    }).catch(err => {
+      notifyError((err.code === "ERR_BAD_REQUEST") ? err.response.data.message : err.message)
+    }).finally(() => {
+      loadingButton.hide()
+    })
+}
+</script>
